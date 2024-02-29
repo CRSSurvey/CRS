@@ -92,7 +92,7 @@ def run_one_episode(rec_model, user_id, busi_id, MAX_TURN, do_random, write_fp, 
     agent_utterance = None
     while (the_agent.turn_count < MAX_TURN):
         if the_agent.turn_count == 0:
-            user_utterance = the_user.response(start_signal) # 返回的是message: 包含user, item, facet_inform, dict(value, facet)
+            user_utterance = the_user.response(start_signal) # message: user, item, facet_inform, dict(value, facet)
         else:
             user_utterance = the_user.response(agent_utterance)
         # print('The user utterance in #{} turn, type: {}, data: {}\n'.format(the_agent.turn_count, user_utterance.message_type, user_utterance.data))
@@ -113,7 +113,7 @@ def run_one_episode(rec_model, user_id, busi_id, MAX_TURN, do_random, write_fp, 
             else:
                 return (the_agent.log_prob_list, rewards, rec_success_record)
 
-        agent_utterance = the_agent.response(user_utterance)# 决定推或者问，推什么，问什么。
+        agent_utterance = the_agent.response(user_utterance)
 
         the_agent.turn_count += 1
 
