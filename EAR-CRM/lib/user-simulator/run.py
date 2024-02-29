@@ -35,7 +35,7 @@ def cuda_(var):
 def main():
     # -eval 0 -initeval 0 -trick 0 -mini 1 -alwaysupdate 1 -upcount 1 -upreg 0.001 -code stable -mask 0 -purpose train -mod ear 
     parser = argparse.ArgumentParser(description="Run conversational recommendation.")
-    parser.add_argument('-mt', type=int, default=15, dest='mt', help='MAX_TURN') # agent.py里也要一起调整
+    parser.add_argument('-mt', type=int, default=15, dest='mt', help='MAX_TURN') 
     parser.add_argument('-playby', type=str, default='policy', dest='playby', help='playby')
     # options include:
     # AO: (Ask Only and recommend by probability)
@@ -142,11 +142,11 @@ def main():
                 fp = '../../../data/PN-model-crm/pretrain-model.pt'
     INPUT_DIM = 0
     if A.mod == 'ear':
-        # INPUT_DIM = 89 #拼接后的state的总维度  s_ent + s_pre + s_his + s_len 
-        INPUT_DIM = 126 #所有state拼接后的最大总维度  s_ent + s_pre + s_his + s_len + s_seq #TODO: all state
+        # INPUT_DIM = 89 #  s_ent + s_pre + s_his + s_len 
+        INPUT_DIM = 126 #  s_ent + s_pre + s_his + s_len + s_seq #TODO: all state
     if A.mod == 'crm':
         INPUT_DIM = 126 # s_seq
-        # INPUT_DIM = 126 #所有state拼接后的最大总维度  s_seq + s_ent + s_pre + s_his + s_len #TODO: all state
+        # INPUT_DIM = 126 #  s_seq + s_ent + s_pre + s_his + s_len #TODO: all state
     print('fp is: {}'.format(fp))
     PN_model = PolicyNetwork(input_dim=INPUT_DIM, dim1=64, output_dim=34)
     start = time.time()
@@ -228,7 +228,7 @@ def main():
                 f.write(
                     'Starting new\nuser ID: {}, item ID: {} episode count: {}, feature: {}\n'.format(user_id, item_id, epi_count, cfg.item_dict[str(item_id)]['categories']))
             start_facet = c
-            if A.purpose != 'pretrain': #log_prob_list: (1,current_turn),每一轮选中的action的prob
+            if A.purpose != 'pretrain': #log_prob_list: (1,current_turn)
                 log_prob_list, rewards, rec_success_record = run_one_episode(current_FM_model, user_id, item_id, A.mt, False, write_fp,
                                                          A.strategy, A.TopKTaxo,
                                                          PN_model, gamma, A.trick, A.mini,
@@ -247,7 +247,7 @@ def main():
                                                          PN_model, gamma, A.trick, A.mini,
                                                          optimizer1_fm, optimizer2_fm, optimizer3, A.alwaysupdate, start_facet,
                                                          A.mask, sample_dict)# TODO: reject attribute online update
-                numpy_list += current_np ####numpy_list存的是((action, state_vector))
+                numpy_list += current_np #numpy_list: ((action, state_vector))
 
             # update PN model
             if A.playby == 'policy' and A.eval != 1:
