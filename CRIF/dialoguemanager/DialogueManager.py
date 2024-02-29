@@ -91,14 +91,11 @@ class DialogueManager:
         self.current_agent_action = None
         self.silence = silence
         
-        # 获取初始parent attribute，和negative and positive attribute value set
-        # 随机找一个 target item的target attribute里任一parent attribute作为init_parent_attribute
-        # target item的target attribute value中属于init_parent_attribute的 作为 init_pos_attribute_set
-        # 剩下的init_parent_attribute的所有attribute value作为init_neg_attribute_set
+        
         init_pos_attribute_set, init_neg_attribute_set, init_parent_attribute \
             = self.user.init_episode(target_user, target_item, given_init_parent_attribute) 
         # conv_his, length, asked_attribute type list, positive_attribute value, 
-        # negative_attribute value, candidate item，target_attribute 初始化
+        # negative_attribute value, candidate item，target_attribute inite
         self.convhis.init_conv(target_user, target_item, init_pos_attribute_set, init_neg_attribute_set, init_parent_attribute)
 
         return self.get_state()
@@ -110,29 +107,21 @@ class DialogueManager:
         candidate_list = self.convhis.get_candidate_list()
 
         conv_neg_item_list = set(self.convhis.get_conv_neg_item_list())
-        # current_neg_item_set 是否全部包含 conv_neg_item_list, e.g., conv_neg_item_list {1,2,3,4,5}, current_neg_item_set {1,2,3,4}
-        # conv_neg_item_list - self.current_neg_item_set = {5}, 就是上一轮对话新增的reject item
+        # e.g., conv_neg_item_list {1,2,3,4,5}, current_neg_item_set {1,2,3,4}
+        # conv_neg_item_list - self.current_neg_item_set = {5}, the new reject item
         neg_item_list = conv_neg_item_list - self.current_neg_item_set 
-        if neg_item_list != None: # 否  更新current_neg_item_set
+        if neg_item_list != None: # update current_neg_item_set
             self.current_neg_item_set = conv_neg_item_list
         ask_item_list, cand_score_list = self.rec.get_recommend_item_list(self.target_item, list(neg_item_list), candidate_list)
-        action_index = self.convhis.get_max_attribute_entropy_index() # 获取entropy 最大的attribute type(parent attr) index（用item个数算）
-        # feedback_rec_item_list，获取rec的item 列表， scoring item + attr—rule item
-        # feedback_att_list：所有attr-rule选的item的所有 attribute
+        action_index = self.convhis.get_max_attribute_entropy_index() 
         feedback_rec_item_list, feedback_att_list = self.get_feedback_recommend(ask_item_list) 
         if len(self.convhis.get_pos_attribute()) == 2 and len(feedback_att_list) > 0:
             print("pos: ", self.convhis.get_pos_attribute(), " item: ", feedback_rec_item_list[-len(feedback_att_list):],  " att: ", feedback_att_list, " ; u: ", self.target_user, " ; i: ", self.target_item)
 
-        # 把所有按照attribute rule-base 选出来的candidate item的attribute区分一下, 后面用于inference，e.g., item1：attr1, attr2, attr3
-        # feedback_attribute_list = attr1, attr2
-        # feedback_pos_attribute_set = attr1, attr2
-        # feedback_neg_attribute_set = attr3
+    
         feedback_attribute_list = self.user_turn_for_rec_att_feedback(feedback_att_list)
         feedback_pos_attribute_set = set(feedback_attribute_list)
         feedback_neg_attribute_set = set(feedback_att_list) - feedback_pos_attribute_set
-        # print('_____________________________________________________________')
-        # print(feedback_att_list, self.convhis.get_pos_attribute(), self.user.pos_attribute_set, feedback_pos_attribute_set)
-        # print('_____________________________________________________________')
 
         be_len, be_rank = self.convhis.get_candidate_len_and_target_rank_base_list(cand_score_list) # candidate length, target item rank
 
@@ -141,13 +130,13 @@ class DialogueManager:
         feedback_rec_list = []
         feedback_rec_success = False
         feedback_item_list = self.user_turn(None, feedback_rec_item_list)
-        if len(feedback_item_list) == 0: # 推错了; 更新candidate_item_len, target item rank, new_candidate_item_list
+        if len(feedback_item_list) == 0: 
             feedback_rec_len, feedback_rec_rank, feedback_rec_list = self.convhis.get_candidate_len_and_target_rank_for_feedback_rec(feedback_rec_item_list, feedback_pos_attribute_set, feedback_neg_attribute_set)
-        else: # 推对了
+        else: 
             feedback_rec_success = True
 
         ask_attribute_list = self.attribute_tree[action_index]
-        attribute_list = self.user_turn(ask_attribute_list, None) # 问对，问错之后 pos attribute的更新
+        attribute_list = self.user_turn(ask_attribute_list, None) 
         pos_attribute_set = set(attribute_list)
         neg_attribute_set = set(ask_attribute_list) - pos_attribute_set
         # 更新candidate_item_len, target item rank, new_candidate_item_list
@@ -166,11 +155,11 @@ class DialogueManager:
             ask_attribute_list = self.attribute_tree[action_index]
             attribute_list = self.user_turn(ask_attribute_list, None)
             pos_attribute_set = set(attribute_list)
-            neg_attribute_set = set(ask_attribute_list) - pos_attribute_set # 父attribute下面所有不是pos的都是neg
+            neg_attribute_set = set(ask_attribute_list) - pos_attribute_set 
 
-            if len(pos_attribute_set) == 0: # 问错了
+            if len(pos_attribute_set) == 0: 
                 step_state = "0" + str(list(neg_attribute_set)[0])
-            else: # 问对了
+            else: 
                 step_state = "1" + str(list(pos_attribute_set)[0])
 
             self.convhis.add_new_attribute(pos_attribute_set, action_index)
@@ -200,16 +189,16 @@ class DialogueManager:
                 if len(accept_att) > 0:
                     self.convhis.add_pos_attribute(accept_att)
 
-            if len(item_list) > 0: # 推对了
+            if len(item_list) > 0: 
                 IsOver = True
                 success = True
                 feedback_rec_reward = feedback_rec_reward + torch.tensor(1.0).cuda()
 
                 step_state = "2"
-            else: # 推错了
-                if len(feedback_att_list) > 0: # 如果有按照attr-rule选择的item
+            else: 
+                if len(feedback_att_list) > 0: 
                     step_state = "4" + str(feedback_rec_item_list[-1]) + "qwe" + str(feedback_att_list[-1])
-                else: # 全部是按item score选的item，没有符合attribute-rule的item
+                else: 
                     step_state = "3" + str(feedback_rec_item_list[0])
 
 
@@ -224,7 +213,7 @@ class DialogueManager:
             reward = feedback_rec_reward
 
         self.turn_num += 1
-        if self.turn_num == self.turn_limit + 1: # 超过最大轮数未推成功 quit
+        if self.turn_num == self.turn_limit + 1: 
             reward = reward - torch.tensor(0.3).cuda()
             if success:
                 success = False
@@ -236,13 +225,6 @@ class DialogueManager:
         rec_result = None
         if success:
             rec_result = [feedback_rec_item_list, self.target_item]
-            # print('____________________________________________________________')
-            # print (feedback_rec_item_list, self.target_item, feedback_rec_rank)
-            # print('____________________________________________________________')
-        # if len(feedback_att_list) > 0:
-        #     print(f'*************************{step_state}*************************')
-        #     print(feedback_neg_attribute_set, (self.convhis.neg_attribute))
-        #     print(f'**************************************************')
         return IsOver, self.get_state(), reward, success, be_len, be_rank, ask_len, ask_rank, \
                feedback_rec_len, feedback_rec_rank, ask_reward, feedback_rec_reward, step_state, rec_result 
         # metric end
