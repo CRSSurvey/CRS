@@ -20,7 +20,7 @@ import argparse
 import sys
 
 
-def feature_similarity(given_preference, userID, TopKTaxo): # 公式6
+def feature_similarity(given_preference, userID, TopKTaxo): 
     preference_matrix_all = cfg.user_emb[[userID]]
     if len(given_preference) > 0:
         preference_matrix = cfg.emb_matrix[given_preference]
