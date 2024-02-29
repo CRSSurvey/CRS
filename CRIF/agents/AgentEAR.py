@@ -62,7 +62,7 @@ class AgentEAR:
         while not IsOver: # False
             attribute_distribution = self.DPN(state.float().cuda(), True)
             c = Categorical(probs = attribute_distribution)
-            action = c.sample() # 选概率最大的attribute
+            action = c.sample() 
             
             # IsOver, next_state, reward, success, be_len, be_rank, ask_len, ask_rank, \
             # feedback_rec_len, feedback_rec_rank, ask_reward, feedback_rec_reward, step_state = self.env.step(action)
@@ -71,15 +71,8 @@ class AgentEAR:
             IsOver, next_state, reward, success, be_len, be_rank, ask_len, ask_rank, \
             feedback_rec_len, feedback_rec_rank, ask_reward, feedback_rec_reward, step_state, rec_result = self.env.step(action)
             # metric end
-            # 只有问对了才更新candidate item set
-            # print('_____________________________________________________________')
-            # print (step_state, be_len, ask_len, feedback_rec_len)
-            # print('_____________________________________________________________')
 
             label_tensor = torch.tensor([0, 1])
-            # input  1) 推或者问之前的candidate_item_len, target item rank；
-            #        2) 问之后的candidate_item_len, target item rank；
-            #        3) 推错了之后的candidate_item_len, target item rank
             ask_reward_more = human_feedback(be_len, be_rank, ask_len, ask_rank, feedback_rec_len, feedback_rec_rank) # 人工判断哪个 action 更好the predefined Rules judge which action is better in each turn.
             if ask_reward_more:
                 label_tensor = torch.tensor([1, 0])
@@ -106,9 +99,6 @@ class AgentEAR:
         IsOver = False
         while not IsOver:
             turn_count += 1 # turn start at 1
-            # print('########################################################')
-            # print(state)
-            # print('########################################################')
             attribute_distribution = self.DPN(state.float().cuda(), True)
 
             action = int(attribute_distribution.argmax())
