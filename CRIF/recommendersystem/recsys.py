@@ -108,8 +108,8 @@ class recsys():
             if candidate_list is not None:
                 candidate_list = candidate_list.cuda()
 
-        neg_item_list = [] # 与get_item_preference_with_neg_item 不一样的地方
-        target_item = -1 # 与get_item_preference_with_neg_item 不一样的地方， 有这两行， 就不更新neg item 和 user的embedding
+        neg_item_list = [] 
+        target_item = -1 # do not update neg item and user embedding
         item_score = self.rec.get_item_score_single(user, target_item, pos_att_list, neg_att_list, neg_item_list, candidate_list)
         item_score = item_score.detach()
         if self.use_gpu:
