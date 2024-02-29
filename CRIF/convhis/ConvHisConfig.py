@@ -12,9 +12,9 @@ class ConvHisConfig():
         self.att_tree_dict = config.att_tree_dict
         self.user_info = config.user_info
         self.item_info = config.item_info
-        self.att_pos_state = 1 # 问对了
-        self.att_neg_state = -1 # 问错了
-        self.item_neg_state = -2 # 推错了
+        self.att_pos_state = 1 
+        self.att_neg_state = -1 
+        self.item_neg_state = -2 
         self.init_state = 0
         self.max_conv_length = 15
         self.user_info_path = root_path + "/data/user_info.json"
