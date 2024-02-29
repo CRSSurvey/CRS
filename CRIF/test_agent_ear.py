@@ -104,11 +104,11 @@ def agent_eval(agent, load_model_type, dm, write_fp):
             contain_rec_feed = False
             contain_ask_suc = False
             for state in state_list:
-                if state[0] == '4': # 推错了且有按照attr-rule选择的item
+                if state[0] == '4': 
                     contain_rec_feed = True
-                if state[0] == '1': # 问对了
+                if state[0] == '1': 
                     contain_ask_suc = True
-            if state_list[-1][0] == '2' and contain_rec_feed: # 问错了 且 推错了(有按照attr-rule选择的item)
+            if state_list[-1][0] == '2' and contain_rec_feed: 
                 print("get one")
                 print(e_data[0], e_data[1])
                 print(len(state_list))
