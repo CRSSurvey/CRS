@@ -39,11 +39,11 @@ def rank_items(given_preference, userID, itemID, skip_big_feature, FM_model, can
     static_score = static_score.detach().cpu().numpy()
     score_dict = dict()
     for index, item in enumerate(static_score.reshape(-1).tolist()):
-        score_dict[item] = candidate_list[index]# 每一个candidate item 对应的分数， key: score, value: item
+        score_dict[item] = candidate_list[index]
 
     assert len(candidate_list) == len(static_score)
     assert candidate_list[-1] == itemID
-    target_value = static_score[-1] # GT 对应的分数
+    target_value = static_score[-1] 
     ranked_score = nlargest(100000, static_score.reshape(-1).tolist())# find the n largest data in static_score (rank)
     target_position = ranked_score.index(target_value)
     top10_mean = np.mean(np.array(ranked_score[: 10]))
