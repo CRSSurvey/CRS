@@ -67,7 +67,7 @@ def validate(purpose, train_list, valid_list, test_list, model):
 
         y_pred += pred_result.cpu().numpy().tolist()
 
-    # 和CART不一样的地方
+    
     print('Validating purpose {} takes {} seconds, cumulative loss is: {}, accuracy: {}%'.format(purpose, time.time() - start, epoch_loss / max_iter, correct * 100.0 / (max_iter * bs)))
     print(classification_report(y_true, y_pred))
     # end
@@ -79,7 +79,7 @@ def train(bs, train_list, valid_list, test_list, optimizer, model, criterion, ep
     if epoch > 0:
         validate(2, train_list, valid_list, test_list, model)
 
-    if epoch == 7: # CART 是9  最后一轮
+    if epoch == 7: 
         PATH = model_path
         torch.save(model.state_dict(), PATH)
         print('Model saved at {}'.format(PATH))
@@ -97,7 +97,7 @@ def train(bs, train_list, valid_list, test_list, optimizer, model, criterion, ep
         temp_out = np.array([item[0] for item in data_batch])# len: bs; item type: int
 
         a = [item[1] for item in data_batch]# len: bs; item shape: (state, ), array
-        s = a[0].shape[0] # state 向量的长度
+        s = a[0].shape[0] 
 
         b = np.concatenate(a).reshape(-1, s) # (bs, state) array
 
@@ -147,10 +147,9 @@ def main():
     print('Model on GPU')
     data_list = list()
     if A.rec =='transE':
-        dir = '../../../data/pretrain-numpy-data-{}-{}'.format(A.mod, A.rec)#TODO: 在run文件里pretrain模式下
+        dir = '../../../data/pretrain-numpy-data-{}-{}'.format(A.mod, A.rec)#TODO: run.py pretrain
     if A.rec =='FM':
-        dir = '../../../data/pretrain-numpy-data-{}-{}-interact-{}'.format(A.mod, A.rec, A.interact)#TODO: 在run文件里pretrain模式下
-
+        dir = '../../../data/pretrain-numpy-data-{}-{}-interact-{}'.format(A.mod, A.rec, A.interact)#TODO: run.py pretrain
     files = os.listdir(dir)
     file_paths = [dir + '/' + f for f in files]
 
@@ -180,7 +179,7 @@ def main():
         optimizer = torch.optim.Adam(PN.parameters(), lr=A.lr, weight_decay=A.decay)
     criterion = nn.CrossEntropyLoss()
 
-    for epoch in range(8): # CART 是10
+    for epoch in range(8): 
         random.shuffle(train_list)
         if A.rec =='FM':
             if A.interact == 0:
