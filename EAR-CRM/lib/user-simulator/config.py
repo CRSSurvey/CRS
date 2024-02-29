@@ -31,9 +31,9 @@ class _Config():
         with open('../../data/{}/review_dict_test.json'.format(dir), 'r') as f:
             self._test_user_to_items = json.load(f)
         with open('../../data/{}/FM_busi_list.pickle'.format(dir), 'rb') as f:
-            self.busi_list = pickle.load(f) # reindex 后的所有item 7432
+            self.busi_list = pickle.load(f) 
         with open('../../data/{}/FM_user_list.pickle'.format(dir), 'rb') as f:
-            self.user_list = pickle.load(f) # reindex 后的所有user 1801
+            self.user_list = pickle.load(f) 
         with open('../../data/{}/FM_train_list.pickle'.format(dir), 'rb') as f:
             self.train_list = pickle.load(f) #length 52910 [(u1,i1),...(uk,ik)]
         with open('../../data/{}/FM_valid_list.pickle'.format(dir), 'rb') as f:
@@ -48,9 +48,6 @@ class _Config():
             self.user_map = json.load(f)
         with open('../../data/{}/tag_map.json'.format(dir), 'r') as f:
             self.tag_map = json.load(f)
-        # print('*****************************************************')
-        # print(self.tag_map)
-        # print('*****************************************************')
 
         self.tag_map_inverted = dict()
         for k, v in self.tag_map.items():
