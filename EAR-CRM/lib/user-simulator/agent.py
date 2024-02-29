@@ -193,9 +193,6 @@ class agent():
         neg_feature = []
         preference_list_1 = []
         pos_list = []
-        # print('=========================================================')
-        # print(set(gt_feature), set(self.known_feature))
-        # print('=========================================================')
         this_residual_feature = list(set(gt_feature) - set(self.known_feature))
         this_neg_feature = [neg_feat]*(len(this_residual_feature))
         residual_feature.append(torch.LongTensor(this_residual_feature))
@@ -207,10 +204,6 @@ class agent():
         preference_list_1 = pad_sequence(preference_list_1, batch_first=True, padding_value=PAD_IDX2)
         pos_list.append(torch.LongTensor([self.user_id, self.busi_id + len(cfg.user_list)]))
         pos_list = pad_sequence(pos_list, batch_first=True, padding_value=PAD_IDX1)
-
-        # print('=========================================================')
-        # print(preference_list_1, residual_feature, neg_feature)
-        # print('=========================================================')
         preference_list_1 = cuda_(preference_list_1)
         pos_list = cuda_(pos_list)
         residual_feature = cuda_(residual_feature)
@@ -239,7 +232,6 @@ class agent():
             self.optimizer3.zero_grad()
             loss.backward()
             self.optimizer3.step()
-            # print('=========================================================')
 
 
     def vectorize_crm(self): #TODO: all state
@@ -262,7 +254,7 @@ class agent():
         result = float(self.user_id) / div
         list8 = [0]*4
 
-        #######################用来作state的对比试验#################
+        #######################state#################
         if cfg.mask == 1:
             list3 = [v for k, v in self.entropy_dict.items()]
         if cfg.mask == 2:
@@ -311,7 +303,7 @@ class agent():
             list8 = [result] * 4
 
 
-        list_cat = list3 + list4 + list5 + list6 + list7 + list8 # 最终的state 33+33+15+8+33+4
+        list_cat = list3 + list4 + list5 + list6 + list7 + list8 # all state 33+33+15+8+33+4
         # list_cat = list7 
         list_cat = np.array(list_cat)
         assert len(list_cat) == 126#122 
@@ -331,8 +323,8 @@ class agent():
         list3 = [v for k, v in self.entropy_dict.items()] # S_ent
         list4 = [v for k, v in self.sim_dict2.items()] # S_pre
 
-        assert len(list3) == len(cfg.FACET_POOL)# 所有attribute都有一个entropy的值，如果不在candidate list中就是0
-        assert len(list4) == len(cfg.FACET_POOL)#每个attribute也都有一个sim值
+        assert len(list3) == len(cfg.FACET_POOL)
+        assert len(list4) == len(cfg.FACET_POOL)
 
         MAX_TURN = 15
         list5 = self.history_list + [0] * (MAX_TURN - len(self.history_list)) # history state: S_his
@@ -362,7 +354,7 @@ class agent():
         result = float(self.user_id) / div
         list8 = [0] * 4# u_embed: user_emb 64
         
-        #######################用来作state的对比试验#################
+       
         if cfg.mask == 1:
             list3 = [0] * len(list3)# length= |attr|
         if cfg.mask == 2:
@@ -381,7 +373,7 @@ class agent():
                 list7[item] = 1
             list8 = [result] * 4
 
-        list_cat = list3 + list4 + list5 + list6 + list7 + list8 # 最终的state
+        list_cat = list3 + list4 + list5 + list6 + list7 + list8
         list_cat = np.array(list_cat)
         # print('===========================================')
         # print(self.user_id, highest_len, list_cat)
@@ -400,9 +392,7 @@ class agent():
 
         if value is not None:
             self.update_this_turn = True
-            # 找出所有满足用户prefer的attribute的item
             self.recent_candidate_list = [k for k in self.recent_candidate_list if set(value).issubset(set(cfg.item_dict[str(k)]['categories']))]
-            # 把gt移到最后
             self.recent_candidate_list = list(set(self.recent_candidate_list) - set([self.busi_id])) + [self.busi_id]
             self.known_feature.append(cfg.tag_map[str(value[0])])
             self.known_feature = list(set(self.known_feature))
@@ -411,13 +401,13 @@ class agent():
             l = list(set(self.recent_candidate_list) - set([self.busi_id]))
             random.shuffle(l)
             if cfg.play_by == 'AOO':
-                self.sample_dict[self.busi_id].append((self.known_feature, l[: 10])) # 包含known_feature的sample
+                self.sample_dict[self.busi_id].append((self.known_feature, l[: 10])) 
             if cfg.play_by == 'AOO_valid':
                 self.sample_dict[self.busi_id].append((self.known_feature, l[: 300]))
             # end dictionary
 
         if cfg.play_by != 'AOO' and cfg.play_by != 'AOO_valid':
-            self.sim_dict = feature_similarity(self.known_feature, self.user_id, self.TopKTaxo)#key: cfg.FACET_POOL里的每一个attribute， value: 与known_feature的cosine相似度
+            self.sim_dict = feature_similarity(self.known_feature, self.user_id, self.TopKTaxo)
             self.sim_dict2 = self.sim_dict.copy()
 
             self.recent_candidate_list = list(set(self.recent_candidate_list) - set([self.busi_id])) + [self.busi_id]
@@ -451,7 +441,6 @@ class agent():
         for f in self.asked_feature:
             if self.sim_dict2 is not None and str(f) in self.sim_dict:
                 self.sim_dict2[str(f)] = -1
-        # 留下没有问过的gt
         residual_feature = cfg.item_dict[str(self.busi_id)]['categories']
         known_ = [int(cfg.tag_map_inverted[item]) for item in self.known_feature]
         residual_feature = list(set(residual_feature) - set(known_))
@@ -516,7 +505,6 @@ class agent():
 
         #_______ update the agent self_______
         if input_message.message_type == cfg.INFORM_FACET:
-            #1. 找出所有包含prefered attr candidate item， 2. 问对了就计算所有candidate list中的attr的entropy；3.记录known_feature和residual_feature
             self.update_upon_feature_inform(input_message) 
             if input_message.data['value'] is None:
                 # TODO: reject attribute online update
@@ -549,11 +537,11 @@ class agent():
         if cfg.play_by != 'AOO' and cfg.play_by != 'AOO_valid':
             # Add control point here
             if cfg.mod == 'ear':
-                state_vector = self.vectorize() # 拿到state
+                state_vector = self.vectorize() 
             else:
                 state_vector = self.vectorize_crm()
 
-        action = None #先清空 action
+        action = None 
         SoftMax = nn.Softmax(dim=-1)
         if cfg.play_by == 'AOO' or cfg.play_by == 'AOO_valid':
             new_message = self.prepare_next_question()
@@ -573,29 +561,29 @@ class agent():
 
         if cfg.play_by == 'policy':
             s = torch.from_numpy(state_vector).float()
-            s = Variable(s, requires_grad=False)# state 不更新
+            s = Variable(s, requires_grad=False)
             self.PN_model.eval()
             pred = self.PN_model(s)
 
             prob = SoftMax(pred)
             c = Categorical(prob)
 
-            if cfg.eval == 1: #需要衡量PN效果的时候，选择PN选出的最大概率的模型去验证
+            if cfg.eval == 1: 
                 pred_data = pred.data.tolist()# [1,2,3] [2,3,1]
-                sorted_index = sorted(range(len(pred_data)), key=lambda k: pred_data[k], reverse=True)# 降序排序
+                sorted_index = sorted(range(len(pred_data)), key=lambda k: pred_data[k], reverse=True)
                 unasked_max = None
-                for item in sorted_index:# 找到所有attr里没被问过且概率最大的attr
+                for item in sorted_index:
                     #Todo
-                    if item < 33: # 如果item是attr, 按概率大小顺序判断这个attr有没有问过
+                    if item < 33: 
                         if cfg.FACET_POOL[item] not in self.asked_feature:
                             unasked_max = item
                             break
-                    else: # 如果item是rec(最后一个)，则直接作rec 
+                    else: 
                         unasked_max = 33 #Todo
                         break
                 action = Variable(torch.IntTensor([unasked_max]))  # make it compatible with torch
                 print('action is: {}'.format(action))
-            else: # train的过程中，预测出每一个行为的概率，然后根据概率随机sample一个行为去训练PN
+            else: 
                 # for training of Action stage
                 i = 0
                 action_ = self.big_feature_length
@@ -603,20 +591,20 @@ class agent():
                     action_ = c.sample()
                     i += 1
                     if action_ <= self.big_feature_length: 
-                        if action_ == self.big_feature_length: # 是rec
+                        if action_ == self.big_feature_length: 
                             break
-                        elif cfg.FACET_POOL[action_] not in self.asked_feature: # 是ask，且没问过的attr
+                        elif cfg.FACET_POOL[action_] not in self.asked_feature: 
                             break
                 action = action_
                 print('action is: {}'.format(action))
 
             log_prob = c.log_prob(action)
-            if self.turn_count != 0: #self.log_prob_list 记录每一轮选择的行为的prob
+            if self.turn_count != 0: 
                 self.log_prob_list = torch.cat([self.log_prob_list, log_prob.reshape(1)])
             else:
                 self.log_prob_list = log_prob.reshape(1)
 
-            if action < len(cfg.FACET_POOL):# 如果是问
+            if action < len(cfg.FACET_POOL):
                 data = dict()
                 data['facet'] = int(cfg.FACET_POOL[action])
                 new_message = message(cfg.AGENT, cfg.USER, cfg.ASK_FACET, data)
